@@ -184,20 +184,27 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="section-title">🌼 1. 내 MBTI를 골라 주세요</div>', unsafe_allow_html=True)
-st.caption("MBTI는 성격을 가볍게 살펴보는 재미있는 도구예요. 결과는 정답이 아니라 즐거운 놀이랍니다!")
+st.caption("아래 목록을 눌러 MBTI를 선택하세요. MBTI는 성격을 가볍게 살펴보는 재미있는 도구예요!")
 
-# 선택 상태를 유지하면서 버튼을 누르면 결과가 표시됩니다.
+# 드롭다운 메뉴로 16가지 MBTI 중 하나를 선택합니다.
 if "selected_mbti" not in st.session_state:
     st.session_state.selected_mbti = None
 
-for row_idx, row in enumerate(TYPE_ORDER):
-    cols = st.columns(4)
-    for col_idx, mbti in enumerate(row):
-        with cols[col_idx]:
-            label = ("✓ " if st.session_state.selected_mbti == mbti else "") + mbti
-            if st.button(label, key=f"mbti_{mbti}", use_container_width=True):
-                st.session_state.selected_mbti = mbti
-                st.rerun()
+mbti_options = ["선택해 주세요"] + [mbti for row in TYPE_ORDER for mbti in row]
+current_index = mbti_options.index(st.session_state.selected_mbti) if st.session_state.selected_mbti in mbti_options else 0
+
+selected_choice = st.selectbox(
+    "나의 MBTI",
+    options=mbti_options,
+    index=current_index,
+    key="mbti_dropdown",
+    help="목록을 열어 자신의 MBTI를 선택하세요.",
+)
+
+if selected_choice == "선택해 주세요":
+    st.session_state.selected_mbti = None
+else:
+    st.session_state.selected_mbti = selected_choice
 
 selected = st.session_state.selected_mbti
 
