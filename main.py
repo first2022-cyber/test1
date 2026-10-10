@@ -1,235 +1,244 @@
 import streamlit as st
-import random
 
 st.set_page_config(
     page_title="MBTI 단짝 포켓몬 찾기",
-    page_icon="🐣",
+    page_icon="⚡",
     layout="centered",
+    initial_sidebar_state="collapsed",
 )
 
-# 따뜻한 크림·노란색 테마
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background: #fffdf5;
-        color: #49391f;
-    }
-    h1, h2, h3 {
-        color: #d88908 !important;
-    }
-    .intro {
-        background: #fff3cc;
-        border: 2px solid #f4d77c;
-        border-radius: 20px;
-        padding: 18px 22px;
-        font-size: 1.15rem;
-        line-height: 1.7;
-        margin-bottom: 18px;
-    }
-    .pokemon-card {
-        background: #fff8e6;
-        border: 2px solid #f3dfaa;
-        border-radius: 24px;
-        padding: 24px;
-        text-align: center;
-        margin-top: 18px;
-    }
-    .pokemon-name {
-        color: #d88908;
-        font-size: 2rem;
-        font-weight: 800;
-        margin-bottom: 4px;
-    }
-    .pokemon-en {
-        color: #806a43;
-        font-size: 1.1rem;
-        margin-bottom: 14px;
-    }
-    .info-label {
-        color: #9a6500;
-        font-weight: 800;
-        font-size: 1.1rem;
-    }
-    .info-text {
-        font-size: 1.08rem;
-        line-height: 1.8;
-    }
-    div[data-baseweb="select"] {
-        font-size: 1.1rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
+# ------------------------------------------------------------
+# MBTI별 단짝 포켓몬 데이터
+# 이미지 주소는 PokeAPI sprites 저장소의 공식 아트워크 파일을 사용합니다.
+# 앱 자체는 외부 API를 호출하지 않으며, 이미지 표시 때만 인터넷이 필요합니다.
+# ------------------------------------------------------------
 POKEMON = {
     "ENFP": {
-        "ko": "피카츄", "en": "Pikachu", "emoji": "⚡",
-        "type": "전기",
-        "trait": "호기심이 많고 활발하며 주변을 밝게 만드는 포켓몬",
-        "reason": "새로운 경험을 즐기고 사람들과 어울리는 ENFP와 피카츄는 에너지가 잘 통하는 단짝이에요.\\n함께라면 평범한 하루도 신나는 모험이 될 거예요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
+        "name": "피카츄", "english": "Pikachu", "id": 25,
+        "type": "전기", "type_emoji": "⚡",
+        "feature": "호기심이 많고 에너지가 넘치는 분위기 메이커",
+        "why": "새로운 일을 보면 함께 뛰어들어 줄 든든한 모험 친구예요.\\n밝은 에너지로 아이디어를 더 신나게 펼쳐 줘요.",
+        "color": "#F6C94D",
     },
     "ENFJ": {
-        "ko": "푸린", "en": "Jigglypuff", "emoji": "🎤",
-        "type": "노말·페어리",
-        "trait": "노래를 좋아하고 친구들의 기분을 살피는 포켓몬",
-        "reason": "다른 사람을 챙기는 ENFJ에게 푸린은 마음을 편안하게 해 주는 친구예요.\\n따뜻한 배려와 즐거운 노래로 서로에게 힘이 되어 줄 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/39.png",
+        "name": "푸린", "english": "Jigglypuff", "id": 39,
+        "type": "노말 · 페어리", "type_emoji": "🎤",
+        "feature": "다정하고 표현력이 풍부한 작은 가수",
+        "why": "친구들의 기분을 살피고 따뜻하게 응원해 줘요.\\n함께 노래하고 이야기하다 보면 모두가 편안해져요.",
+        "color": "#F3A8C8",
     },
     "ENTP": {
-        "ko": "파오리", "en": "Farfetch'd", "emoji": "🦆",
-        "type": "노말·비행",
-        "trait": "자신만의 방식으로 재치 있게 문제를 해결하는 포켓몬",
-        "reason": "기발한 생각을 즐기는 ENTP와 파오리는 늘 새로운 방법을 찾아낼 것 같아요.\\n서로의 아이디어를 주고받으며 지루할 틈 없는 모험을 펼칠 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/83.png",
+        "name": "파오리", "english": "Farfetch'd", "id": 83,
+        "type": "노말 · 비행", "type_emoji": "🦆",
+        "feature": "자기만의 도구를 활용하는 재치 있는 전략가",
+        "why": "엉뚱한 아이디어도 재미있는 도전으로 바꿔 줘요.\\n서로 생각을 주고받으며 새로운 방법을 찾아낼 수 있어요.",
+        "color": "#B6D5A8",
     },
     "ENTJ": {
-        "ko": "갸라도스", "en": "Gyarados", "emoji": "🌊",
-        "type": "물·비행",
-        "trait": "강력한 힘과 추진력을 가진 포켓몬",
-        "reason": "목표를 세우고 앞장서는 ENTJ와 강력한 갸라도스는 추진력이 잘 어울려요.\\n큰 도전 앞에서도 함께 용기를 내고 끝까지 나아갈 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/130.png",
+        "name": "갸라도스", "english": "Gyarados", "id": 130,
+        "type": "물 · 비행", "type_emoji": "🌊",
+        "feature": "강한 추진력과 압도적인 존재감을 가진 포켓몬",
+        "why": "목표를 정하면 힘차게 나아가는 모습을 닮았어요.\\n큰 계획도 용기 있게 시작하도록 서로 북돋아 줘요.",
+        "color": "#8CC8E8",
     },
     "ESFP": {
-        "ko": "이상해꽃", "en": "Venusaur", "emoji": "🌻",
-        "type": "풀·독",
-        "trait": "햇살과 자연을 떠올리게 하는 든든한 포켓몬",
-        "reason": "밝고 활동적인 ESFP에게 이상해꽃은 즐거운 시간을 함께 보내기 좋은 친구예요.\\n함께 자연을 탐험하며 주변의 작은 즐거움도 발견할 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/3.png",
+        "name": "이상해꽃", "english": "Venusaur", "id": 3,
+        "type": "풀 · 독", "type_emoji": "🌻",
+        "feature": "햇살과 자연의 기운을 품은 든든한 친구",
+        "why": "함께하는 시간을 풍성하고 즐겁게 만들어 줘요.\\n활동적인 하루에도 편안히 쉴 수 있는 안정감을 더해요.",
+        "color": "#A8D5A0",
     },
     "ESFJ": {
-        "ko": "럭키", "en": "Chansey", "emoji": "💗",
-        "type": "노말",
-        "trait": "다친 포켓몬을 돌보고 행복을 나누는 포켓몬",
-        "reason": "주변 사람을 잘 챙기는 ESFJ와 럭키는 다정함이라는 공통점이 있어요.\\n서로를 보살피고 좋은 기운을 나누는 포근한 단짝이 될 거예요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/113.png",
+        "name": "럭키", "english": "Chansey", "id": 113,
+        "type": "노말", "type_emoji": "💗",
+        "feature": "다른 이를 돌보는 것을 좋아하는 상냥한 포켓몬",
+        "why": "작은 변화도 알아차리고 먼저 챙겨 주는 모습이 잘 어울려요.\\n서로를 응원하며 따뜻한 팀워크를 만들 수 있어요.",
+        "color": "#F6B7C9",
     },
     "ESTP": {
-        "ko": "리자몽", "en": "Charizard", "emoji": "🔥",
-        "type": "불꽃·비행",
-        "trait": "도전을 두려워하지 않고 하늘을 힘차게 나는 포켓몬",
-        "reason": "직접 경험하고 도전하는 것을 좋아하는 ESTP와 리자몽은 모험심이 닮았어요.\\n새로운 장소를 찾아다니며 짜릿한 경험을 함께할 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png",
+        "name": "리자몽", "english": "Charizard", "id": 6,
+        "type": "불꽃 · 비행", "type_emoji": "🔥",
+        "feature": "모험을 좋아하고 행동력이 뛰어난 포켓몬",
+        "why": "망설이기보다 직접 경험하며 배우는 성향과 잘 맞아요.\\n새로운 장소와 도전을 함께 누비는 콤비가 될 수 있어요.",
+        "color": "#F3A36D",
     },
     "ESTJ": {
-        "ko": "코뿌리", "en": "Rhydon", "emoji": "🪨",
-        "type": "땅·바위",
-        "trait": "튼튼한 몸과 강한 힘으로 앞길을 개척하는 포켓몬",
-        "reason": "책임감 있고 실행력이 좋은 ESTJ와 코뿌리는 믿음직한 팀을 만들어요.\\n계획을 세우고 차근차근 목표를 이루는 과정에서 서로에게 든든한 힘이 될 거예요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/112.png",
+        "name": "코뿌리", "english": "Rhydon", "id": 112,
+        "type": "땅 · 바위", "type_emoji": "🪨",
+        "feature": "튼튼한 몸과 힘으로 앞장서는 믿음직한 포켓몬",
+        "why": "맡은 일을 책임감 있게 해내는 점이 서로 닮았어요.\\n계획을 세우고 차근차근 목표를 이루는 팀이 되어 줘요.",
+        "color": "#C5B8A5",
     },
     "INFP": {
-        "ko": "이브이", "en": "Eevee", "emoji": "🌸",
-        "type": "노말",
-        "trait": "다양한 가능성을 품고 여러 모습으로 성장할 수 있는 포켓몬",
-        "reason": "상상력이 풍부하고 자신만의 가치를 소중히 여기는 INFP와 이브이는 닮은 점이 많아요.\\n서로의 개성을 존중하며 함께 성장하는 단짝이 될 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png",
+        "name": "이브이", "english": "Eevee", "id": 133,
+        "type": "노말", "type_emoji": "🌸",
+        "feature": "가능성이 많고 마음이 따뜻한 포켓몬",
+        "why": "자신만의 속도와 개성을 소중히 여기는 모습이 닮았어요.\\n편안한 곁에서 상상력과 가능성을 마음껏 키울 수 있어요.",
+        "color": "#D9B28C",
     },
     "INFJ": {
-        "ko": "가디안", "en": "Gardevoir", "emoji": "🌙",
-        "type": "에스퍼·페어리",
-        "trait": "소중한 사람을 지키려는 마음이 강한 포켓몬",
-        "reason": "깊이 공감하고 의미 있는 관계를 소중히 여기는 INFJ에게 가디안은 잘 어울려요.\\n말하지 않아도 마음을 헤아리고 서로를 지켜 주는 친구가 될 거예요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/282.png",
+        "name": "가디안", "english": "Gardevoir", "id": 282,
+        "type": "에스퍼 · 페어리", "type_emoji": "🌙",
+        "feature": "소중한 이를 지키려는 마음이 깊은 포켓몬",
+        "why": "말하지 않은 마음까지 헤아리려는 다정함이 잘 어울려요.\\n복잡한 생각을 차분히 나누고 서로에게 힘이 되어 줘요.",
+        "color": "#B9C6E8",
     },
     "INTP": {
-        "ko": "폴리곤", "en": "Porygon", "emoji": "🧩",
-        "type": "노말",
-        "trait": "디지털 공간과 관련된 독특한 포켓몬",
-        "reason": "원리를 탐구하고 논리적으로 생각하는 INTP와 폴리곤은 호기심의 방향이 비슷해요.\\n함께 새로운 규칙과 신기한 현상을 발견하는 탐구 파트너가 될 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/137.png",
+        "name": "폴리곤", "english": "Porygon", "id": 137,
+        "type": "노말", "type_emoji": "🧩",
+        "feature": "디지털 공간에서 활동하는 독특하고 논리적인 포켓몬",
+        "why": "궁금한 것을 깊이 파고들며 원리를 찾는 성향과 잘 맞아요.\\n함께 관찰하고 가설을 세우며 재미있는 답을 찾아봐요.",
+        "color": "#A9C9E8",
     },
     "INTJ": {
-        "ko": "뮤츠", "en": "Mewtwo", "emoji": "🔮",
-        "type": "에스퍼",
-        "trait": "뛰어난 지능과 강한 집중력을 지닌 포켓몬",
-        "reason": "전략적으로 생각하고 장기적인 목표를 세우는 INTJ와 뮤츠는 지적인 분위기가 잘 어울려요.\\n어려운 문제도 차분히 분석하며 함께 해결해 나갈 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/150.png",
+        "name": "뮤츠", "english": "Mewtwo", "id": 150,
+        "type": "에스퍼", "type_emoji": "🔮",
+        "feature": "뛰어난 지능과 전략적인 사고를 지닌 포켓몬",
+        "why": "큰 그림을 생각하고 목표를 향해 계획하는 점이 닮았어요.\\n복잡한 문제도 차분히 분석하며 해결책을 찾는 단짝이에요.",
+        "color": "#C6B5E8",
     },
     "ISFP": {
-        "ko": "치코리타", "en": "Chikorita", "emoji": "🌿",
-        "type": "풀",
-        "trait": "온화하고 주변의 분위기를 편안하게 만드는 포켓몬",
-        "reason": "감각적이고 자신의 속도로 세상을 느끼는 ISFP에게 치코리타는 편안한 친구예요.\\n조용히 산책하고 작은 아름다움을 발견하며 함께 시간을 보낼 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/152.png",
+        "name": "치코리타", "english": "Chikorita", "id": 152,
+        "type": "풀", "type_emoji": "🌿",
+        "feature": "온화하고 주변을 편안하게 해 주는 포켓몬",
+        "why": "조용한 순간과 소소한 아름다움을 즐기는 모습이 잘 어울려요.\\n서두르지 않고 함께 산책하며 마음을 나눌 수 있어요.",
+        "color": "#B6D9A3",
     },
     "ISFJ": {
-        "ko": "럭키", "en": "Chansey", "emoji": "💗",
-        "type": "노말",
-        "trait": "주변을 세심하게 살피고 돌보는 포켓몬",
-        "reason": "성실하고 따뜻하게 주변을 챙기는 ISFJ와 럭키는 배려심이 잘 맞아요.\\n서로의 하루를 보살피며 편안하고 믿음직한 우정을 쌓을 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/113.png",
+        "name": "밀탱크", "english": "Miltank", "id": 241,
+        "type": "노말", "type_emoji": "🐄",
+        "feature": "주변을 보살피고 안정감을 주는 포켓몬",
+        "why": "늘 곁을 지키고 세심하게 챙기는 다정함이 닮았어요.\\n익숙한 일상 속에서 서로에게 든든한 편이 되어 줘요.",
+        "color": "#E9B7C4",
     },
     "ISTP": {
-        "ko": "팬텀", "en": "Gengar", "emoji": "👻",
-        "type": "고스트·독",
-        "trait": "장난기 있고 예상 밖의 행동으로 놀라움을 주는 포켓몬",
-        "reason": "직접 만지고 실험하며 문제를 해결하는 ISTP와 팬텀은 독특한 호흡을 보여 줄 거예요.\\n복잡한 상황에서도 침착하게 방법을 찾아내고 유쾌한 장난도 함께 즐길 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png",
+        "name": "팬텀", "english": "Gengar", "id": 94,
+        "type": "고스트 · 독", "type_emoji": "👻",
+        "feature": "장난기 있고 상황 대처가 빠른 포켓몬",
+        "why": "필요할 때 직접 손을 움직여 문제를 해결하는 모습과 잘 맞아요.\\n예상 밖의 상황도 유연하고 재치 있게 넘길 수 있어요.",
+        "color": "#B8A5D9",
     },
     "ISTJ": {
-        "ko": "거북왕", "en": "Blastoise", "emoji": "🐢",
-        "type": "물",
-        "trait": "튼튼한 등껍질과 안정적인 힘을 지닌 포켓몬",
-        "reason": "차근차근 책임을 다하는 ISTJ와 거북왕은 믿음직한 파트너가 될 수 있어요.\\n꾸준히 연습하고 약속을 지키며 목표를 함께 이루어 나갈 수 있어요.",
-        "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/9.png",
+        "name": "거북왕", "english": "Blastoise", "id": 9,
+        "type": "물", "type_emoji": "🐢",
+        "feature": "차분하고 믿음직하며 꾸준히 실력을 쌓는 포켓몬",
+        "why": "약속과 순서를 지키며 꾸준히 해내는 점이 닮았어요.\\n급하게 서두르지 않고 한 걸음씩 목표에 도달하는 단짝이에요.",
+        "color": "#8EC5E8",
     },
 }
 
-st.title("🐣 MBTI로 내 단짝 포켓몬 찾기")
-st.markdown(
-    '<div class="intro">내 MBTI를 선택하면 나와 잘 어울리는 포켓몬을 찾아드려요!<br>'
-    '어떤 포켓몬이 기다리고 있을까요? ✨</div>',
-    unsafe_allow_html=True,
-)
-
-mbti_types = [
-    "ENFP", "ENFJ", "ENTP", "ENTJ",
-    "ESFP", "ESFJ", "ESTP", "ESTJ",
-    "INFP", "INFJ", "INTP", "INTJ",
-    "ISFP", "ISFJ", "ISTP", "ISTJ",
+TYPE_ORDER = [
+    ["ISTJ", "ISFJ", "INFJ", "INTJ"],
+    ["ISTP", "ISFP", "INFP", "INTP"],
+    ["ESTP", "ESFP", "ENFP", "ENTP"],
+    ["ESTJ", "ESFJ", "ENFJ", "ENTJ"],
 ]
 
-selected_mbti = st.selectbox(
-    "🌟 내 MBTI를 선택해 주세요",
-    mbti_types,
-    index=None,
-    placeholder="MBTI를 선택하세요",
-)
+st.markdown("""
+<style>
+:root { --cream:#fffaf0; --butter:#ffe8a3; --gold:#e6a817; --ink:#493a26; }
+html, body, [class*="css"] { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; }
+.stApp { background: linear-gradient(180deg,#fff9e9 0%,#fffdf7 48%,#fff3ce 100%); color:var(--ink); }
+.block-container { max-width: 850px; padding-top: 2rem; padding-bottom: 3rem; }
+.hero { text-align:center; padding:1.8rem 1rem 1.4rem; border:2px solid #f5d989; border-radius:28px;
+        background:rgba(255,255,255,.72); box-shadow:0 10px 28px rgba(151,112,35,.09); }
+.hero .eyebrow { font-size:1rem; font-weight:900; color:#a8750a; letter-spacing:.08em; }
+.hero h1 { font-family:'Malgun Gothic',sans-serif; font-size:clamp(2.2rem,6vw,3.5rem); line-height:1.2; color:#6b4c13; margin:.5rem 0; }
+.hero p { font-size:1.12rem; margin:.3rem 0; }
+.section-title { font-size:1.4rem; font-weight:900; color:#6b4c13; margin:1.5rem 0 .7rem; }
+div[data-testid="stButton"] button { border-radius:15px; border:2px solid #f0d27c; background:#fffdf6; color:#5d481e;
+    font-size:1.05rem; font-weight:900; min-height:3.2rem; transition:all .15s ease; }
+div[data-testid="stButton"] button:hover { border-color:#e0a800; background:#fff0b9; color:#4b3610; transform:translateY(-1px); }
+.poke-card { border:2px solid #f0d27c; background:rgba(255,255,255,.86); border-radius:28px; overflow:hidden;
+    box-shadow:0 14px 32px rgba(141,103,24,.12); margin-top:1rem; }
+.poke-top { padding:1.5rem 1.4rem 1rem; text-align:center; background:linear-gradient(135deg,#fff3c7,#fffaf0); }
+.poke-top .small-label { color:#967019; font-weight:900; font-size:.95rem; }
+.poke-top h2 { font-family:'Malgun Gothic',sans-serif; font-size:clamp(2rem,5vw,2.8rem); margin:.2rem 0; color:#594014; }
+.poke-top .eng { font-size:1.05rem; color:#8c7446; font-weight:700; }
+.poke-img { display:block; width:min(250px,75%); height:auto; max-height:250px; object-fit:contain; margin:.5rem auto .2rem;
+    filter:drop-shadow(0 10px 5px rgba(106,82,33,.12)); animation:popIn .65s cubic-bezier(.2,1.4,.4,1) both; }
+.poke-body { padding:1.3rem 1.5rem 1.6rem; }
+.chips { display:flex; gap:.55rem; flex-wrap:wrap; justify-content:center; margin:.4rem 0 1.2rem; }
+.chip { border-radius:999px; background:#fff0b9; border:1px solid #f0d27c; padding:.45rem .9rem; font-weight:900; font-size:1rem; }
+.info-title { color:#93670c; font-weight:900; font-size:1.08rem; margin:1rem 0 .3rem; }
+.info-text { font-size:1.08rem; line-height:1.85; color:#51432c; }
+.why-box { background:#fff8df; border-left:5px solid #e6b52d; border-radius:12px; padding:1rem 1.1rem; font-size:1.08rem; line-height:1.9; white-space:pre-line; }
+.footer-note { text-align:center; color:#987e4b; font-size:.88rem; padding-top:1.5rem; }
+div[data-testid="stAlert"] { border-radius:15px; }
+@keyframes popIn { 0%{transform:scale(.45) rotate(-8deg);opacity:0} 70%{transform:scale(1.08) rotate(3deg);opacity:1} 100%{transform:scale(1) rotate(0);opacity:1} }
+@media (max-width:600px) {
+ .block-container { padding-left:1rem; padding-right:1rem; }
+ .hero { padding:1.3rem .7rem; border-radius:22px; }
+ .poke-body { padding:1rem; }
+}
+</style>
+""", unsafe_allow_html=True)
 
-if selected_mbti:
-    pokemon = POKEMON[selected_mbti]
+st.markdown("""
+<div class="hero">
+  <div class="eyebrow">✨ 나와 꼭 맞는 포켓몬 찾기 ✨</div>
+  <h1>MBTI 단짝 포켓몬</h1>
+  <p>내 성격과 잘 어울리는 포켓몬은 누구일까요?</p>
+  <p>아래에서 MBTI를 고르고 단짝을 만나 보세요!</p>
+</div>
+""", unsafe_allow_html=True)
 
+st.markdown('<div class="section-title">🌼 1. 내 MBTI를 골라 주세요</div>', unsafe_allow_html=True)
+st.caption("MBTI는 성격을 가볍게 살펴보는 재미있는 도구예요. 결과는 정답이 아니라 즐거운 놀이랍니다!")
+
+# 선택 상태를 유지하면서 버튼을 누르면 결과가 표시됩니다.
+if "selected_mbti" not in st.session_state:
+    st.session_state.selected_mbti = None
+
+for row_idx, row in enumerate(TYPE_ORDER):
+    cols = st.columns(4)
+    for col_idx, mbti in enumerate(row):
+        with cols[col_idx]:
+            label = ("✓ " if st.session_state.selected_mbti == mbti else "") + mbti
+            if st.button(label, key=f"mbti_{mbti}", use_container_width=True):
+                st.session_state.selected_mbti = mbti
+                st.rerun()
+
+selected = st.session_state.selected_mbti
+
+if selected:
+    p = POKEMON[selected]
+    st.markdown('<div class="section-title">🎉 2. 두근두근… 당신의 단짝은!</div>', unsafe_allow_html=True)
     st.balloons()
-    st.markdown(
-        f"""
-        <div class="pokemon-card">
-          <div style="font-size:1.15rem;font-weight:800;color:#9a6500;">
-            🎉 축하해요! 당신의 단짝 포켓몬을 찾았어요!
-          </div>
-          <div style="font-size:4rem;margin-top:10px;">{pokemon['emoji']}</div>
-          <div class="pokemon-name">{pokemon['ko']}</div>
-          <div class="pokemon-en">({pokemon['en']})</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
-    # 포켓몬 이미지는 인터넷에서 가져옵니다.
-    st.image(pokemon["image"], width=220)
-
-    st.markdown(
-        f"""
-        <div class="pokemon-card" style="text-align:left;">
-          <p><span class="info-label">🔖 타입</span><br>
-          <span class="info-text">{pokemon['type']}</span></p>
-          <p><span class="info-label">✨ 특징</span><br>
-          <span class="info-text">{pokemon['trait']}</span></p>
-          <p><span class="info-label">💛 왜 잘 어울릴까요?</span><br>
-          <span class="info-text">{pokemon['reason'].replace(chr(10), '<br>')}</span></p>
+    image_url = f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/{p['id']}.png"
+    why = p["why"].replace("\\n", "\n")
+    st.markdown(f"""
+    <div class="poke-card">
+      <div class="poke-top">
+        <div class="small-label">💛 {selected}의 단짝 포켓몬 💛</div>
+        <h2>{p['name']}</h2>
+        <div class="eng">{p['english']}</div>
+        <img class="poke-img" src="{image_url}" alt="{p['name']} 공식 아트워크"
+             onerror="this.onerror=null;this.style.display='none';document.getElementById('image-fallback').style.display='block';">
+        <div id="image-fallback" style="display:none;font-size:5rem;padding:1.5rem;">✨</div>
+      </div>
+      <div class="poke-body">
+        <div class="chips">
+          <span class="chip">{p['type_emoji']} 타입: {p['type']}</span>
+          <span class="chip">💫 MBTI: {selected}</span>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        <div class="info-title">🌟 포켓몬 특징</div>
+        <div class="info-text">{p['feature']}</div>
+        <div class="info-title">💌 왜 잘 어울릴까요?</div>
+        <div class="why-box">{why.replace(chr(10), '<br>')}</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("")
+    if st.button("🔄 다른 MBTI도 만나 보기", use_container_width=True):
+        st.session_state.selected_mbti = None
+        st.rerun()
+
+st.markdown("""
+<div class="footer-note">
+  포켓몬 이미지는 PokeAPI sprites 저장소의 공식 아트워크를 표시합니다.<br>
+  MBTI와 포켓몬의 연결은 재미를 위한 창작 설정입니다.
+</div>
+""", unsafe_allow_html=True)
